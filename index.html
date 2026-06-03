@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Acortador Pro</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 40px; background: #f0f2f5; color: #333; }
+        .card { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; font-size: 16px; cursor: pointer; }
+        #resultado { margin-top: 20px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Acortador de Enlaces</h2>
+        <input type="url" id="longUrl" placeholder="Pega tu link largo aquí...">
+        <button onclick="crearEnlace()">Acortar y Monetizar</button>
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE TU SUPABASE
+        const SUPABASE_URL = "https://vyrzkurggqvgylbznfwo.supabase.co/rest/v1/";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5cnprdXJnZ3F2Z3lsYnpuZndvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNTc4MzUsImV4cCI6MjA5NTkzMzgzNX0.iKqFDhmQWtHG17HdHIVz5HQDtXuyWmkmacJK_2Nb2pM";
+
+        // Función para generar un código aleatorio (Ej: aB3x9Z)
+        function generarCodigo() {
+            return Math.random().toString(36).substring(2, 8);
+        }
+
+        async function crearEnlace() {
+            const urlOriginal = document.getElementById('longUrl').value;
+            if(!urlOriginal) return alert('Ingresa una URL');
+
+            const codigoAleatorio = generarCodigo();
+
+            // Guardar en la base de datos de Supabase vía API
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/enlaces`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({
+                    codigo: codigoAleatorio,
+                    url_original: urlOriginal
+                })
+            });
+
+            if(response.ok) {
+                // Obtener la URL actual de tu GitHub Pages de forma dinámica
+                const urlBase = window.location.href.split('index.html')[0];
+                const enlaceCorto = `${urlBase}go.html?id=${codigoAleatorio}`;
+                
+                document.getElementById('resultado').innerHTML = `
+                    <p>¡Enlace creado con éxito!</p>
+                    <input type="text" value="${enlaceCorto}" readonly onclick="this.select()">
+                `;
+            } else {
+                alert('Hubo un error al guardar el enlace.');
+            }
+        }
+    </script>
+</body>
+</html>
