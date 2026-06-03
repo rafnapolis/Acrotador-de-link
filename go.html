@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirigiendo...</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 80px; background: #fafafa; }
+        .box { max-width: 400px; margin: auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .btn { display:none; background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 18px; }
+    </style>
+    
+    <!-- ⬇️ PEGA AQUÍ TU SCRIPT DE HILLTOPADS ⬇️ -->
+    <script>
+        // Aquí va el código publicitario de HilltopAds
+    </script>
+    <!-- ⬆️ -------------------------------- ⬆️ -->
+</head>
+<body>
+    <div class="box">
+        <h3>Tu enlace se está procesando...</h3>
+        <p id="contador">Cargando datos...</p>
+        <a id="btnDestino" class="btn" href="#">👉 IR AL ENLACE</a>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "TU_SUPABASE_URL";
+        const SUPABASE_KEY = "TU_SUPABASE_ANON_KEY";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const codigoUrl = urlParams.get('id');
+
+        if (!codigoUrl) {
+            document.body.innerHTML = "<h2>Error: Enlace no válido.</h2>";
+        } else {
+            obtenerUrlOriginal(codigoUrl);
+        }
+
+        async function obtenerUrlOriginal(codigo) {
+            // Consultar a Supabase por el código único
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/enlaces?codigo=eq.${codigo}&select=url_original`, {
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+
+            const datos = await response.json();
+
+            if (datos && datos.length > 0) {
+                const urlFinal = datos[0].url_original;
+                iniciarContador(urlFinal);
+            } else {
+                document.body.innerHTML = "<h2>El enlace ha expirado o no existe.</h2>";
+            }
+        }
+
+        function iniciarContador(urlDestino) {
+            let tiempo = 10; // Segundos que el usuario verá los anuncios
+            
+            const cuentaAtras = setInterval(() => {
+                tiempo--;
+                document.getElementById('contador').innerText = `Espera ${tiempo} segundos para continuar...`;
+                
+                if (tiempo <= 0) {
+                    clearInterval(cuentaAtras);
+                    document.getElementById('contador').style.display = 'none';
+                    const boton = document.getElementById('btnDestino');
+                    boton.href = urlDestino;
+                    boton.style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
