@@ -5,59 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirigiendo...</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 80px; background: #fafafa; }
-        .box { max-width: 400px; margin: auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .btn { display:none; background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 18px; }
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f0f2f5; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn { display: none; background: #28a745; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 18px; font-weight: bold; margin-top: 20px; cursor: pointer; border: none; width: 100%; }
+        #contador { font-size: 18px; color: #555; font-weight: bold; margin: 15px 0; }
     </style>
-    
-    <!-- ⬇️ PEGA AQUÍ TU SCRIPT DE HILLTOPADS ⬇️ -->
-    <script>
-        // Aquí va el código publicitario de HilltopAds
-    </script>
-    <!-- ⬆️ -------------------------------- ⬆️ -->
 </head>
 <body>
-    <div class="box">
-        <h3>Tu enlace se está procesando...</h3>
-        <p id="contador">Cargando datos...</p>
-        <a id="btnDestino" class="btn" href="#">👉 IR AL ENLACE</a>
+    <div class="container">
+        <h2>Procesando tu enlace...</h2>
+        <div id="loader" class="loader"></div>
+        <p id="contador">Cargando datos del servidor...</p>
+        
+        <a id="btnDestino" class="btn" target="_self">¡Ir al Enlace!</a>
     </div>
 
     <script>
-        const SUPABASE_URL = "https://vyrzkurggqvgylbznfwo.supabase.co/rest/v1/";
+        // CONFIGURACIÓN DE TU SUPABASE (Idéntica a index.html)
+        const SUPABASE_URL = "https://vyrzkurggqvgylbznfwo.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5cnprdXJnZ3F2Z3lsYnpuZndvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNTc4MzUsImV4cCI6MjA5NTkzMzgzNX0.iKqFDhmQWtHG17HdHIVz5HQDtXuyWmkmacJK_2Nb2pM";
 
+        // Obtener el código único desde la URL (Ej: go.html?id=aB3x9Z)
         const urlParams = new URLSearchParams(window.location.search);
-        const codigoUrl = urlParams.get('id');
+        const idCodigo = urlParams.get('id');
 
-        if (!codigoUrl) {
-            document.body.innerHTML = "<h2>Error: Enlace no válido.</h2>";
-        } else {
-            obtenerUrlOriginal(codigoUrl);
-        }
+        async function buscarDestino() {
+            if (!idCodigo) {
+                document.getElementById('contador').innerText = "Enlace no válido.";
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
 
-        async function obtenerUrlOriginal(codigo) {
-            // Consultar a Supabase por el código único
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/enlaces?codigo=eq.${codigo}&select=url_original`, {
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`
+            try {
+                // Hacer la consulta a Supabase buscando el código correspondiente
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/enlaces?codigo=eq.${idCodigo}`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const datos = await response.json();
+
+                if (response.ok && datos.length > 0) {
+                    // Si encuentra el enlace, inicia la cuenta regresiva pasándole la URL original
+                    iniciarContador(datos[0].url_original);
+                } else {
+                    document.getElementById('contador').innerText = "El enlace no existe o ha expirado.";
+                    document.getElementById('loader').style.display = 'none';
                 }
-            });
-
-            const datos = await response.json();
-
-            if (datos && datos.length > 0) {
-                const urlFinal = datos[0].url_original;
-                iniciarContador(urlFinal);
-            } else {
-                document.body.innerHTML = "<h2>El enlace ha expirado o no existe.</h2>";
+            } catch (error) {
+                document.getElementById('contador').innerText = "Error de conexión con el servidor.";
+                document.getElementById('loader').style.display = 'none';
             }
         }
 
-        function iniciarContador(https://omg10.com/4/9616941) {
-            let tiempo = 10; // Segundos que el usuario verá los anuncios
-            
+        function iniciarContador(urlDestino) {
+            document.getElementById('loader').style.display = 'none';
+            let tiempo = 10; // Segundos de espera para el usuario
+
             const cuentaAtras = setInterval(() => {
                 tiempo--;
                 document.getElementById('contador').innerText = `Espera ${tiempo} segundos para continuar...`;
@@ -66,11 +76,21 @@
                     clearInterval(cuentaAtras);
                     document.getElementById('contador').style.display = 'none';
                     const boton = document.getElementById('btnDestino');
+                    
+                    // CONFIGURACIÓN DE TU SMARTLINK DE MONETAG (Ya integrado)
+                    boton.onclick = function() {
+                        window.open("https://omg10.com/4/9616941", "_blank");
+                    };
+                    
+                    // En la pestaña actual, el botón lo redirige al enlace original guardado
                     boton.href = urlDestino;
                     boton.style.display = 'inline-block';
                 }
             }, 1000);
         }
+
+        // Ejecutar la búsqueda automáticamente al cargar la página
+        buscarDestino();
     </script>
 </body>
 </html>
